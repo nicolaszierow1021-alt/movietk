@@ -1,11 +1,20 @@
-import { saveBanner } from '@/app/actions/bannerActions';
 import { supabase } from '@/lib/supabase';
+import BannerFormClient from './BannerFormClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function BannerManagementPage() {
   const { data: announcements } = await supabase.from('Announcement').select('*').limit(1);
   const currentBanner = announcements && announcements.length > 0 ? announcements[0] : null;
+
+  let initialData = { text: '', icon: 'alert', link: '', bgColor: '#E50914' };
+  if (currentBanner?.message) {
+    try {
+      initialData = JSON.parse(currentBanner.message);
+    } catch (e) {
+      initialData.text = currentBanner.message;
+    }
+  }
 
   return (
     <div>
@@ -22,65 +31,10 @@ export default async function BannerManagementPage() {
         backgroundColor: '#141414', border: '1px solid #1f1f1f',
         borderRadius: '12px', padding: '2rem', maxWidth: '800px'
       }}>
-        <form action={saveBanner}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            
-            {/* Mensaje */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label htmlFor="message" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ccc', textTransform: 'uppercase' }}>
-                Mensaje del Anuncio
-              </label>
-              <textarea 
-                id="message" 
-                name="message" 
-                rows={3}
-                required
-                defaultValue={currentBanner?.message || ''}
-                placeholder="Ej: ¡Nuevo servidor de Telegram! Únete aquí..."
-                style={{
-                  backgroundColor: '#0a0a0a', border: '1px solid #2a2a2a', color: '#fff',
-                  padding: '1rem', borderRadius: '8px', fontSize: '1rem', fontFamily: 'inherit',
-                  resize: 'vertical', outline: 'none'
-                }}
-              />
-            </div>
-
-            {/* Estado */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label htmlFor="isActive" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ccc', textTransform: 'uppercase' }}>
-                Estado
-              </label>
-              <select 
-                id="isActive" 
-                name="isActive" 
-                defaultValue={currentBanner?.isActive ? 'true' : 'false'}
-                style={{
-                  backgroundColor: '#0a0a0a', border: '1px solid #2a2a2a', color: '#fff',
-                  padding: '1rem', borderRadius: '8px', fontSize: '1rem', outline: 'none', cursor: 'pointer'
-                }}
-              >
-                <option value="true">🟢 Activo (Mostrar en la web)</option>
-                <option value="false">🔴 Inactivo (Ocultar)</option>
-              </select>
-            </div>
-
-            {/* Submit */}
-            <button 
-              type="submit"
-              style={{
-                marginTop: '1rem', backgroundColor: '#1d4ed8', color: '#fff',
-                border: 'none', padding: '1rem', borderRadius: '8px',
-                fontSize: '1rem', fontWeight: 700, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              Guardar Configuración
-            </button>
-          </div>
-        </form>
+        <BannerFormClient 
+          initialData={initialData} 
+          initialIsActive={currentBanner ? currentBanner.isActive : false} 
+        />
       </div>
     </div>
   );
